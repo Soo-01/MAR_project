@@ -77,6 +77,7 @@ git push -u origin main
 
 ## 참고
 
+- robot_model_v5_scene.xml 파일의 충돌 모델 조금 더 정교하게 업데이트 했습니다. 26.06.23
 - MuJoCo XML은 `model/` 폴더의 STL mesh를 참조하므로, `robot_model_v5_scene.xml`과 `model/`은 같은 루트 구조를 유지해야 합니다.
 - 기본 출력 폴더는 `scoop_lut_output_v11/`입니다.
 - `scoop_lut_output_v11/`은 현재 repository에 포함하도록 설정되어 있습니다.
