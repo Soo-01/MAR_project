@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meal-assist-robot"
+version = "0.1.0"
+description = "MuJoCo-based meal assistance robot simulation for spoon scooping primitive generation and replay."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "matplotlib>=3.7",
+  "mujoco>=3.1",
+]
+
+[project.scripts]
+meal-assist = "meal_assist.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["meal_assist*"]

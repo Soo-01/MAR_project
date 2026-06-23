@@ -1,0 +1,221 @@
+<mujoco model="6dof_manipulator_aligned_visual">
+  <compiler angle="radian" meshdir="model/" coordinate="local"/>
+
+  <option gravity="0 0 -9.81" timestep="0.0005"/>
+
+  <asset>
+    <mesh name="link1_mesh" file="link1.stl"/>
+    <mesh name="link2_mesh" file="link2.stl"/>
+    <mesh name="link3_mesh" file="link3.stl"/>
+    <mesh name="link4_mesh" file="link4.stl"/>
+    <mesh name="link5_mesh" file="link5.stl"/>
+    <mesh name="link6_mesh" file="link6.stl"/>
+    <mesh name="link7_mesh" file="link7.stl"/>
+  </asset>
+
+  <default>
+    <geom contype="0" conaffinity="0" type="mesh" rgba="0.7 0.7 0.7 1"/>
+    <joint type="hinge" frictionloss="0.05"/>
+    <position kp="1000"/>
+
+    <default class="collision">
+      <geom type="mesh" contype="1" conaffinity="1" group="3" rgba="1 0 0 0.2"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1"/>
+    <geom type="plane" size="1 1 0.1" rgba="0.9 0.9 0.9 0.5" contype="1" conaffinity="1"/>
+
+  <!-- ================================================================ -->
+    <!--  로봇 본체                                                         -->
+    <!-- ================================================================ -->
+    <body name="link1" pos="0 0 0" euler="0 0 0.785398">
+      <inertial pos="-0.0168 0.0000 -0.0370" mass="0.1640" diaginertia="0.0000527 0.0000832 0.0000745"/>
+      <geom mesh="link1_mesh"/>
+      <geom class="collision" type="box" size="0.0375 0.0246 0.0314" pos="0.0000 0.0000 0.0370"/>
+
+      <body name="link2" pos="0.03350 0 0.07105">
+        <inertial pos="0.0000 -0.0004 0.0364" mass="0.3310" diaginertia="0.0001545 0.0001709 0.0001221"/>
+        <joint name="joint1" axis="0 0 1" range="-1.0472 1.0472" limited="true" damping="1.0" armature="0.0001"/>
+        <geom mesh="link2_mesh"/>
+        <geom class="collision" type="box" size="0.0275 0.0286 0.0404" pos="0.0000 0.0000 0.0370"/>
+
+        <body name="link3" pos="0 0 0.0565">
+          <inertial pos="0.0040 0.0000 0.1320" mass="0.2833" diaginertia="0.0003512 0.0003161 0.0000861"/>
+          <joint name="joint2" axis="0 1 0" range="-2.3911 1.2566" limited="true" damping="1.0" armature="0.0001"/>
+          <geom mesh="link3_mesh"/>
+          <geom class="collision" type="box" size="0.0246 0.0375 0.0684" pos="0.0000 0.0000 0.0970"/>
+
+          <body name="link4" pos="0.024 0.00005 0.1445">
+            <inertial pos="0.0330 0.0001 0.2953" mass="0.2650" diaginertia="0.0004458 0.0004420 0.0001073"/>
+            <joint name="joint3" axis="0 1 0" range="-1.1345 1.9199" limited="true" damping="1.0" armature="0.0001"/>
+            <geom mesh="link4_mesh"/>
+            <geom class="collision" type="box" size="0.0246 0.0375 0.0738" pos="0.0000 0.0000 0.1010"/>
+
+            <body name="link5" pos="0.02535 0 0.18165">
+              <inertial pos="0.0493 0.0001 0.4181" mass="0.1550" diaginertia="0.0000283 0.0000308 0.0000155"/>
+              <joint name="joint4" axis="0 0 1" range="-0.3840 1.9199" limited="true" damping="1.0" armature="5e-05"/>
+              <geom mesh="link5_mesh"/>
+              <geom class="collision" type="box" size="0.0275 0.0246 0.0374" pos="0.0000 0.0000 0.0410"/>
+
+              <body name="link6" pos="0 0 0.06010">
+                <inertial pos="0.0494 -0.0030 0.4945" mass="0.2260" diaginertia="0.0000851 0.0000973 0.0000596"/>
+                <joint name="joint5" axis="1 0 0" range="-2.6529 1.2566" limited="true" damping="1.0" armature="1e-05"/>
+                <geom mesh="link6_mesh"/>
+                <geom class="collision" type="box" size="0.0246 0.0305 0.0314" pos="0.0000 -0.0050 0.0600"/>
+
+                <body name="link7" pos="0.00005 -0.016 0.0875">
+                  <inertial pos="0.0505 -0.0033 0.5603" mass="0.1964" diaginertia="0.0000675 0.0000155 0.0000563"/>
+                  <joint name="joint6" axis="0 0 1" limited="false" damping="1.0" armature="1e-05"/>
+                  <geom mesh="link7_mesh"/>
+                  <geom class="collision" type="box" size="0.0246 0.1075 0.0154" pos="0.0000 0.0300 0.0370"/>
+                  <site name="spoon_tip" pos="0.014529 0.104125 0.036995" size="0.005" rgba="1 0 0 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ================================================================ -->
+    <!--  식판 (Tray)                                                       -->
+    <!--                                                                    -->
+    <!--  좌표계 (world frame 기준)                                          -->
+    <!--    식판 원점(우측 하단): x=0.075, y=0.130                          -->
+    <!--    식판 우측 상단(+X):   x=0.285, y=0.130                          -->
+    <!--    식판 좌측 하단(+Y):   x=0.075, y=0.410                          -->
+    <!--    식판 표면 z = 0.040                                              -->
+    <!--    드래그 방향: -X (x 감소 방향, 로봇 쪽)                           -->
+    <!-- ================================================================ -->
+
+    <!-- 식판 판체 (베이지, 전체 40mm 두께) -->
+    <!-- 중심: x=0.180  y=0.270  z=0.020  -->
+    <!-- 크기: x±0.105  y±0.140  z±0.020  (표면 z=0.040) -->
+    <geom name="tray_body" type="box"
+          pos="0.180 0.270 0.020" size="0.105 0.140 0.020"
+          rgba="0.82 0.74 0.62 1"/>
+
+    <!-- 식판 테두리 (4방향, 약간 돌출) -->
+    <geom name="tray_edge_front"  type="box" pos=" 0.180 0.128 0.043" size="0.107 0.002 0.007" rgba="0.60 0.52 0.42 1"/>
+    <geom name="tray_edge_back"   type="box" pos=" 0.180 0.412 0.043" size="0.107 0.002 0.007" rgba="0.60 0.52 0.42 1"/>
+    <geom name="tray_edge_left"   type="box" pos=" 0.073 0.270 0.043" size="0.002 0.142 0.007" rgba="0.60 0.52 0.42 1"/>
+    <geom name="tray_edge_right"  type="box" pos=" 0.287 0.270 0.043" size="0.002 0.142 0.007" rgba="0.60 0.52 0.42 1"/>
+
+    <!-- ── 5개 Region 컬러 오버레이 (반투명, 식판 표면 위) ── -->
+    <!--
+        Region 배치 (tray frame → world frame):
+          1 rice/main : tray x[0.000~0.1092] y[0.000~0.1344]  →  world x[0.075~0.1842] y[0.130~0.2644]
+          2 side_1    : tray x[0.1092~0.210] y[0.000~0.0896]  →  world x[0.1842~0.285] y[0.130~0.2196]
+          3 side_2    : tray x[0.1092~0.210] y[0.0896~0.1792]  →  world x[0.1842~0.285] y[0.2196~0.3092]
+          4 side_3    : tray x[0.1092~0.210] y[0.1792~0.280]  →  world x[0.1842~0.285] y[0.3092~0.410]
+          5 soup      : tray x[0.000~0.1092] y[0.1344~0.280]  →  world x[0.075~0.1842] y[0.2644~0.410]
+    -->
+
+    <!-- Region 1: rice / main  (연두색) -->
+    <geom name="region1_overlay" type="box"
+          pos="0.1296 0.1972 0.0418" size="0.0546 0.0672 0.0018"
+          rgba="0.35 0.78 0.35 0.55"/>
+
+    <!-- Region 2: side_1       (하늘색) -->
+    <geom name="region2_overlay" type="box"
+          pos="0.2346 0.1748 0.0418" size="0.0504 0.0448 0.0018"
+          rgba="0.35 0.60 0.92 0.55"/>
+
+    <!-- Region 3: side_2       (보라색) -->
+    <geom name="region3_overlay" type="box"
+          pos="0.2346 0.2644 0.0418" size="0.0504 0.0448 0.0018"
+          rgba="0.72 0.45 0.90 0.55"/>
+
+    <!-- Region 4: side_3       (주황색) -->
+    <geom name="region4_overlay" type="box"
+          pos="0.2346 0.3596 0.0418" size="0.0504 0.0504 0.0018"
+          rgba="0.95 0.70 0.25 0.55"/>
+
+    <!-- Region 5: soup / extra (분홍색) -->
+    <geom name="region5_overlay" type="box"
+          pos="0.1296 0.3372 0.0418" size="0.0546 0.0728 0.0018"
+          rgba="0.92 0.40 0.40 0.55"/>
+
+    <!-- ── 구역 경계선 (얇은 박스) ── -->
+    <!-- 가로 분할선: Region 1 ↕ Region 5  (y = 0.2644, x: 0.075~0.1842) -->
+    <geom name="div_r1_r5"  type="box" pos="0.1296 0.2644 0.043" size="0.0546 0.0012 0.004" rgba="0.45 0.38 0.28 0.9"/>
+    <!-- 세로 분할선: Region 1 ↔ Region 2/3  (x = 0.1842, y: 0.130~0.2644) -->
+    <geom name="div_left_right_lower" type="box" pos="0.1842 0.1972 0.043" size="0.0012 0.0672 0.004" rgba="0.45 0.38 0.28 0.9"/>
+    <!-- 세로 분할선: Region 5 ↔ Region 3/4  (x = 0.1842, y: 0.2644~0.410) -->
+    <geom name="div_left_right_upper" type="box" pos="0.1842 0.3372 0.043" size="0.0012 0.0728 0.004" rgba="0.45 0.38 0.28 0.9"/>
+    <!-- 가로 분할선: Region 2 ↕ Region 3  (y = 0.2196, x: 0.1842~0.285) -->
+    <geom name="div_r2_r3"  type="box" pos="0.2346 0.2196 0.043" size="0.0504 0.0012 0.004" rgba="0.45 0.38 0.28 0.9"/>
+    <!-- 가로 분할선: Region 3 ↕ Region 4  (y = 0.3092, x: 0.1842~0.285) -->
+    <geom name="div_r3_r4"  type="box" pos="0.2346 0.3092 0.043" size="0.0504 0.0012 0.004" rgba="0.45 0.38 0.28 0.9"/>
+
+    <!-- ── 음식 Barrier (숟가락 -X drag 시 음식이 걸리는 벽) ── -->
+    <!--  높이 25 mm, 두께 6 mm, 갈색  -->
+    <!--  Region 1 & 5: x=0.075 (식판 왼쪽 끝)  -->
+    <!--  Region 2,3,4: x=0.1842 (좌우 중앙 분리선)  -->
+
+    <!-- Region 1 barrier -->
+    <geom name="barrier_r1" type="box"
+          pos="0.0780 0.1972 0.0525" size="0.0030 0.0672 0.0125"
+          rgba="0.65 0.45 0.20 1"/>
+    <!-- Region 2 barrier -->
+    <geom name="barrier_r2" type="box"
+          pos="0.1872 0.1748 0.0525" size="0.0030 0.0448 0.0125"
+          rgba="0.65 0.45 0.20 1"/>
+    <!-- Region 3 barrier -->
+    <geom name="barrier_r3" type="box"
+          pos="0.1872 0.2644 0.0525" size="0.0030 0.0448 0.0125"
+          rgba="0.65 0.45 0.20 1"/>
+    <!-- Region 4 barrier -->
+    <geom name="barrier_r4" type="box"
+          pos="0.1872 0.3596 0.0525" size="0.0030 0.0504 0.0125"
+          rgba="0.65 0.45 0.20 1"/>
+    <!-- Region 5 barrier -->
+    <geom name="barrier_r5" type="box"
+          pos="0.0780 0.3372 0.0525" size="0.0030 0.0728 0.0125"
+          rgba="0.65 0.45 0.20 1"/>
+
+    <!-- ── Region 번호 마커 (작은 원기둥, 각 region 중심) ── -->
+    <geom name="label_r1" type="cylinder" pos="0.1296 0.1972 0.054" size="0.012 0.004" rgba="0.20 0.60 0.20 1"/>
+    <geom name="label_r2" type="cylinder" pos="0.2346 0.1748 0.054" size="0.012 0.004" rgba="0.20 0.40 0.80 1"/>
+    <geom name="label_r3" type="cylinder" pos="0.2346 0.2644 0.054" size="0.012 0.004" rgba="0.55 0.20 0.75 1"/>
+    <geom name="label_r4" type="cylinder" pos="0.2346 0.3596 0.054" size="0.012 0.004" rgba="0.80 0.50 0.05 1"/>
+    <geom name="label_r5" type="cylinder" pos="0.1296 0.3372 0.054" size="0.012 0.004" rgba="0.80 0.20 0.20 1"/>
+
+    <!-- ================================================================ -->
+    <!--  v5: 입(Mouth) 위치 마커 — XML에서 제거됨.                          -->
+    <!--                                                                    -->
+    <!--  Mouth 위치는 (x=0, y=0.26, z∈[0.3,0.6])에서 실시간으로 IK가       -->
+    <!--  최적 z를 선택하므로, 정적 XML 마커 대신 SequenceRunner가          -->
+    <!--  viewer user_scn에 동적으로 핑크 구 마커를 그린다.                  -->
+    <!--  (구버전 mouth_sphere/mouth_site/mouth_pole 제거.)                  -->
+    <!-- ================================================================ -->
+
+    <!-- ================================================================ -->
+    <!--  로봇 base 마커 (원점 확인용)                                      -->
+    <!-- ================================================================ -->
+    <geom name="base_marker" type="cylinder"
+          pos="0.0 0.0 0.001" size="0.030 0.001"
+          rgba="0.30 0.30 0.30 0.6"/>
+
+  </worldbody>
+
+  <contact>
+    <exclude body1="link1" body2="link2"/>
+    <exclude body1="link2" body2="link3"/>
+    <exclude body1="link3" body2="link4"/>
+    <exclude body1="link4" body2="link5"/>
+    <exclude body1="link5" body2="link6"/>
+    <exclude body1="link6" body2="link7"/>
+  </contact>
+
+  <actuator>
+    <position name="a1" joint="joint1" forcerange="-4.1 4.1"/>   <!-- XM430-W350 -->
+    <position name="a2" joint="joint2" forcerange="-10.6 10.6"/>  <!-- XM540-W270 -->
+    <position name="a3" joint="joint3" forcerange="-4.1 4.1"/>   <!-- XM430-W350 -->
+    <position name="a4" joint="joint4" forcerange="-4.1 4.1"/>   <!-- XM430-W350 -->
+    <position name="a5" joint="joint5" forcerange="-4.1 4.1"/>   <!-- XM430-W350 -->
+    <position name="a6" joint="joint6" forcerange="-4.1 4.1"/>   <!-- XM430-W350 -->
+  </actuator>
+</mujoco>

@@ -1,0 +1,46 @@
+{
+  "config": {
+    "neutral_radius": 0.08,
+    "neutral_z_min": 0.22,
+    "neutral_z_max": 0.28,
+    "neutral_grid_xy": 7,
+    "neutral_grid_z": 3,
+    "neutral_normal_weight": 0.2,
+    "neutral_head_drop_min": 0.0,
+    "neutral_head_drop_weight": 0.0,
+    "neutral_position_tol": 0.025,
+    "neutral_tilt_score_weight": 1.0,
+    "neutral_joint_margin_ratio": 0.015,
+    "neutral_center_tray": [
+      0.075,
+      -0.02
+    ],
+    "neutral_margin_score_weight": 3.0,
+    "multi_start_trials": 12,
+    "random_seed": 13,
+    "base_x_offset": 0.075,
+    "base_y_offset": 0.13,
+    "base_z_offset": 0.0,
+    "tray_x_length": 0.21,
+    "tray_y_length": 0.28,
+    "tray_surface_z": 0.04
+  },
+  "connector": {
+    "q_neutral": [
+      -0.1557636732600174,
+      -0.04730622348000743,
+      1.3767212686330035,
+      0.1407224313403996,
+      -2.003383406658762,
+      0.21873067506361676
+    ],
+    "neutral_pos": [
+      0.09666666666666666,
+      0.16333333333333333,
+      0.29
+    ],
+    "pos_error": 0.017458857957259866,
+    "tilt_error": 0.06345634414836757,
+    "head_drop": 0.01977307878272294
+  }
+}

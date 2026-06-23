@@ -1,0 +1,12 @@
+name: meal_venv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - matplotlib
+  - scipy
+  - pip:
+      - mujoco

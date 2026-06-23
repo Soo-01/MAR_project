@@ -1,0 +1,41 @@
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+meal_venv/
+
+# Generated robot-planning outputs
+scoop_lut_output_v11_260610/
+singularity_analysis_output/
+trajectory_taskspace_ik_*.csv
+trajectory_taskspace_ik_*.json
+/mouth_connector.json
+/neutral_connector.json
+/primitive_*.csv
+/primitive_*.json
+/summary*.json
+
+# Local/export bundles
+share/
+*.zip
+
+# Local notes and legacy snapshots
+docs/
+old_version/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
