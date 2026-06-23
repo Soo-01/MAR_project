@@ -33,6 +33,7 @@ share/
 # Local notes and legacy snapshots
 docs/
 old_version/
+universal_robots_ur5e/
 
 # OS/editor noise
 .DS_Store
