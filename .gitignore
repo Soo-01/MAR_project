@@ -34,7 +34,7 @@ share/
 docs/
 old_version/
 universal_robots_ur5e/
-
+trajectory_optimization/
 
 # OS/editor noise
 .DS_Store
