@@ -1,4 +1,4 @@
-# Meal Assist Robot
+# MAR_project
 
 MuJoCo 기반 식사 보조 로봇 시뮬레이션 프로젝트입니다. 숟가락으로 음식을 뜨는 동작을 만들기 위해 tray 영역별 scoop primitive를 생성하고, IK로 검증한 뒤 LUT로 저장하고 replay하는 파이프라인을 포함합니다.
 
@@ -70,15 +70,10 @@ STL mesh 파일은 크기가 크기 때문에 Git LFS 사용을 권장합니다.
 
 ```bash
 git lfs install
-git init
 git add .
-git commit -m "Initial meal assist robot workspace"
-git branch -M main
-git remote add origin <repository-url>
+git commit -m "Add meal assist robot workspace"
 git push -u origin main
 ```
-
-이미 GitHub repository를 만들어 두었다면 `<repository-url>` 자리에 해당 repository 주소를 넣으면 됩니다.
 
 ## 참고
 
