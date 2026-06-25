@@ -29,7 +29,7 @@ The terminology follows the current project code:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple
+from typing import Iterable, Tuple
 
 import numpy as np
 
@@ -40,8 +40,9 @@ from meal_assist.mathutils import smoothstep5
 from meal_assist.robot import RobotModel, mujoco
 
 
-DEFAULT_N_NODES = 21
+DEFAULT_N_NODES = 50
 DEFAULT_OUT_DIR = Path("tutorial_drag_opt_output")
+N_REF = np.array([0.0, 0.0, 1.0], dtype=float)
 
 
 def load_best_primitive(cfg: SystemConfig) -> ScoopPrimitive:
@@ -152,6 +153,159 @@ def baseline_drag_path(primitive: ScoopPrimitive, n_nodes: int) -> Tuple[np.ndar
     q0, q1 = drag_keyframes(primitive)
     p0, p1 = drag_task_endpoints(primitive)
     return smooth_q_path(q0, q1, n_nodes), straight_tip_path(p0, p1, n_nodes)
+
+
+def lift_keyframes(primitive: ScoopPrimitive) -> Tuple[np.ndarray, np.ndarray]:
+    """Return the drag_end and lift joint keyframes."""
+    return (
+        np.array(primitive.q_drag_end, dtype=float),
+        np.array(primitive.q_lift, dtype=float),
+    )
+
+
+def lift_task_endpoints(primitive: ScoopPrimitive) -> Tuple[np.ndarray, np.ndarray]:
+    """Return the drag_end and lift task-space endpoints."""
+    return (
+        np.array(primitive.drag_end_pos, dtype=float),
+        np.array(primitive.lift_pos, dtype=float),
+    )
+
+
+def baseline_lift_path(primitive: ScoopPrimitive, n_nodes: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Build the baseline q trajectory and target tip path for lift."""
+    q0, q1 = lift_keyframes(primitive)
+    p0, p1 = lift_task_endpoints(primitive)
+    return smooth_q_path(q0, q1, n_nodes), straight_tip_path(p0, p1, n_nodes)
+
+
+def pack_endpoint_path(q_path: np.ndarray) -> np.ndarray:
+    """Pack a single segment by optimizing only interior nodes."""
+    return q_path[1:-1].flatten()
+
+
+def unpack_endpoint_path(x: np.ndarray, q_path: np.ndarray) -> np.ndarray:
+    """Restore a single segment whose first and last nodes are fixed."""
+    return np.vstack([
+        q_path[0].reshape(1, 6),
+        x.reshape(-1, 6),
+        q_path[-1].reshape(1, 6),
+    ])
+
+
+def pack_fixed_nodes(q_full: np.ndarray, fixed: Iterable[int]) -> np.ndarray:
+    """Pack all trajectory nodes except fixed waypoint indices."""
+    fixed_set = set(fixed)
+    return np.array([q_full[i] for i in range(len(q_full)) if i not in fixed_set]).flatten()
+
+
+def unpack_fixed_nodes(x: np.ndarray, q_full_init: np.ndarray, fixed: Iterable[int]) -> np.ndarray:
+    """Restore a full trajectory while preserving fixed waypoint indices."""
+    fixed_set = set(fixed)
+    result = q_full_init.copy()
+    n_var = len(q_full_init) - len(fixed_set)
+    variable = x.reshape(n_var, 6)
+    vi = 0
+    for i in range(len(result)):
+        if i not in fixed_set:
+            result[i] = variable[vi]
+            vi += 1
+    return result
+
+
+def joint_bounds(robot: RobotModel, n_var_nodes: int) -> list[tuple[float, float]]:
+    """Return SLSQP bounds for n variable 6-DOF joint nodes."""
+    lo = robot.q_lower.tolist()
+    hi = robot.q_upper.tolist()
+    return [(lo[j], hi[j]) for _ in range(n_var_nodes) for j in range(6)]
+
+
+def measure_tilt(robot: RobotModel, q: np.ndarray, n_ref: np.ndarray = N_REF) -> float:
+    """Return the spoon normal tilt magnitude for one joint configuration."""
+    d = mujoco.MjData(robot.model)
+    robot.set_q(d, q)
+    n_cur = robot.current_body_axis_world(
+        d, np.array(robot.cfg.spoon_normal_local, dtype=float)
+    )
+    return float(np.linalg.norm(np.cross(n_cur, n_ref)))
+
+
+def ramp_tilt_constraints(
+    robot: RobotModel,
+    q_path: np.ndarray,
+    n_ref: np.ndarray,
+    eps_tilt: float,
+    tilt_at_start: float,
+) -> np.ndarray:
+    """Return ramp tilt inequalities g_k >= 0 for q_path[1:].
+
+    q_path[0] is the fixed start posture, so constraints are evaluated from
+    q_path[1] through the segment end. The allowed tilt changes linearly from
+    tilt_at_start to eps_tilt.
+    """
+    d = mujoco.MjData(robot.model)
+    n_local = np.array(robot.cfg.spoon_normal_local, dtype=float)
+    n = len(q_path) - 1
+    g = []
+    for k, q in enumerate(q_path[1:], start=1):
+        alpha = k / max(n, 1)
+        eps_k = tilt_at_start * (1.0 - alpha) + eps_tilt * alpha
+        robot.set_q(d, q)
+        n_cur = robot.current_body_axis_world(d, n_local)
+        tilt = float(np.linalg.norm(np.cross(n_cur, n_ref)))
+        g.append(eps_k - tilt)
+    return np.asarray(g, dtype=float)
+
+
+def flat_tilt_constraints(
+    robot: RobotModel,
+    q_path: np.ndarray,
+    n_ref: np.ndarray,
+    eps_tilt: float,
+) -> np.ndarray:
+    """Return flat tilt inequalities g_k >= 0 for q_path[1:]."""
+    d = mujoco.MjData(robot.model)
+    n_local = np.array(robot.cfg.spoon_normal_local, dtype=float)
+    g = []
+    for q in q_path[1:]:
+        robot.set_q(d, q)
+        n_cur = robot.current_body_axis_world(d, n_local)
+        tilt = float(np.linalg.norm(np.cross(n_cur, n_ref)))
+        g.append(eps_tilt - tilt)
+    return np.asarray(g, dtype=float)
+
+
+def lift_tilt_violation(
+    robot: RobotModel,
+    q_path: np.ndarray,
+    n_ref: np.ndarray,
+    eps_tilt: float,
+    tilt_at_start: float,
+) -> dict[str, float | int | bool]:
+    """Return diagnostic statistics for the lift ramp tilt constraint."""
+    d = mujoco.MjData(robot.model)
+    n_local = np.array(robot.cfg.spoon_normal_local, dtype=float)
+    n = len(q_path) - 1
+    tilts, eps_ks = [], []
+    for k, q in enumerate(q_path[1:], start=1):
+        alpha = k / max(n, 1)
+        eps_k = tilt_at_start * (1.0 - alpha) + eps_tilt * alpha
+        robot.set_q(d, q)
+        n_cur = robot.current_body_axis_world(d, n_local)
+        tilts.append(float(np.linalg.norm(np.cross(n_cur, n_ref))))
+        eps_ks.append(eps_k)
+
+    tilts = np.asarray(tilts, dtype=float)
+    eps_ks = np.asarray(eps_ks, dtype=float)
+    violated = tilts > eps_ks + 1e-6
+    return {
+        "max_tilt_deg": float(np.degrees(tilts.max())),
+        "mean_tilt_deg": float(np.degrees(tilts.mean())),
+        "final_tilt_deg": float(np.degrees(tilts[-1])),
+        "n_violated": int(np.sum(violated)),
+        "n_checked": int(len(tilts)),
+        "eps_tilt_final_deg": float(np.degrees(eps_tilt)),
+        "constraint_satisfied": bool(not np.any(violated)),
+    }
 
 
 def tip_tracking_cost(robot: RobotModel, q_path: np.ndarray, target_tip_path: np.ndarray) -> float:
@@ -340,3 +494,131 @@ def show_tip_path_viewer(
                     )
                     scn.ngeom += 1
             viewer.sync()
+
+
+def animate_two_viewers(
+    robot: RobotModel,
+    baseline: np.ndarray,
+    optimized: np.ndarray,
+    title: str,
+    fps: int = 10,
+) -> None:
+    """Show baseline and optimized as two separate MuJoCo viewer windows.
+
+    Window 1 (왼쪽): baseline (smoothstep 보간)
+    Window 2 (오른쪽): optimized (SLSQP 결과)
+
+    두 윈도우가 같은 프레임 k에서 동기화되어 재생.
+    어느 쪽 창이든 닫으면 둘 다 종료.
+    """
+    import threading
+    import time
+
+    xml_path = str(robot.cfg.xml_path)
+    model1 = mujoco.MjModel.from_xml_path(xml_path)
+    model2 = mujoco.MjModel.from_xml_path(xml_path)
+    d1 = mujoco.MjData(model1)
+    d2 = mujoco.MjData(model2)
+
+    tip_id = mujoco.mj_name2id(model1, mujoco.mjtObj.mjOBJ_SITE, "spoon_tip")
+
+    # tip 궤적 사전 계산
+    def _tip_path(model, traj):
+        d = mujoco.MjData(model)
+        pts = []
+        for q in traj:
+            d.qpos[:model.nq] = q[:model.nq]
+            d.qvel[:] = 0.0
+            mujoco.mj_forward(model, d)
+            pts.append(d.site(tip_id).xpos.copy())
+        return np.array(pts)
+
+    baseline_tips  = _tip_path(model1, baseline)
+    optimized_tips = _tip_path(model2, optimized)
+
+    n = len(baseline)
+    dt = 1.0 / fps
+    running = [True]
+    k_shared = [0]
+    mat_eye = np.eye(3, dtype=np.float64).flatten()
+
+    def viewer_thread(model, data, traj, tip_pts, dot_rgba, label):
+        """FK 업데이트 + tip 경로 점 렌더링을 뷰어 스레드 안에서 처리."""
+        dot_faint = dot_rgba.copy()
+        dot_faint[3] = 0.25  # 전체 경로: 연하게
+
+        with mujoco.viewer.launch_passive(model, data) as v:
+            print(f"[VIEWER] {label}")
+            while v.is_running() and running[0]:
+                k = k_shared[0]
+
+                # 로봇 자세 갱신
+                data.qpos[:model.nq] = traj[k][:model.nq]
+                data.qvel[:] = 0.0
+                mujoco.mj_forward(model, data)
+
+                # tip 경로 점 그리기
+                scn = v.user_scn
+                scn.ngeom = 0
+
+                # 전체 경로 (연하게)
+                for p in tip_pts:
+                    if scn.ngeom >= scn.maxgeom:
+                        break
+                    mujoco.mjv_initGeom(
+                        scn.geoms[scn.ngeom],
+                        mujoco.mjtGeom.mjGEOM_SPHERE,
+                        np.array([0.004, 0.0, 0.0], dtype=np.float64),
+                        p.astype(np.float64),
+                        mat_eye,
+                        dot_faint,
+                    )
+                    scn.ngeom += 1
+
+                # 지나온 경로 (진하게)
+                for p in tip_pts[:k + 1]:
+                    if scn.ngeom >= scn.maxgeom:
+                        break
+                    mujoco.mjv_initGeom(
+                        scn.geoms[scn.ngeom],
+                        mujoco.mjtGeom.mjGEOM_SPHERE,
+                        np.array([0.006, 0.0, 0.0], dtype=np.float64),
+                        p.astype(np.float64),
+                        mat_eye,
+                        dot_rgba,
+                    )
+                    scn.ngeom += 1
+
+                v.sync()
+                time.sleep(0.005)
+        running[0] = False
+
+    blue  = np.array([0.15, 0.45, 1.0,  0.9], dtype=np.float32)
+    green = np.array([0.00, 0.90, 0.25, 0.9], dtype=np.float32)
+
+    t1 = threading.Thread(
+        target=viewer_thread,
+        args=(model1, d1, baseline,  baseline_tips,  blue,  f"[BASELINE]  {title}"),
+        daemon=True,
+    )
+    t2 = threading.Thread(
+        target=viewer_thread,
+        args=(model2, d2, optimized, optimized_tips, green, f"[OPTIMIZED] {title}"),
+        daemon=True,
+    )
+    t1.start()
+    t2.start()
+    time.sleep(0.5)
+
+    print(f"[VIEWER] {title}  |  파란 창=baseline / 초록 창=optimized  (반복 재생)")
+
+    while running[0]:
+        for k in range(n):
+            if not running[0]:
+                break
+            k_shared[0] = k
+            time.sleep(dt)
+        time.sleep(0.5)
+
+    t1.join(timeout=2)
+    t2.join(timeout=2)

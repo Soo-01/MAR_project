@@ -37,11 +37,11 @@ from tutorial_drag_opt_common import (
     DEFAULT_N_NODES,
     DEFAULT_OUT_DIR,
     acceleration_cost,
+    animate_two_viewers,
     baseline_drag_path,
     drag_keyframes,
     head_singularity_terms,
     load_best_primitive,
-    show_tip_path_viewer,
     tip_tracking_cost,
 )
 
@@ -186,7 +186,7 @@ def main() -> None:
     print(f"saved        = {out_path}")
 
     if args.viewer:
-        show_tip_path_viewer(robot, baseline_path, best_path, "Step 4 head/singularity")
+        animate_two_viewers(robot, baseline_path, best_path, "Step 4 head/singularity")
 
 
 if __name__ == "__main__":

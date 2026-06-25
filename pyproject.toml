@@ -7,7 +7,7 @@ name = "meal-assist-robot"
 version = "0.1.0"
 description = "MuJoCo-based meal assistance robot simulation for spoon scooping primitive generation and replay."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.24",
   "scipy>=1.10",

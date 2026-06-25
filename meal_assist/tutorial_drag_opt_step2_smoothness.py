@@ -17,7 +17,7 @@ This still does not optimize. It only shows that a trajectory cost can combine
 task-space tracking and joint-space smoothness.
 """
 from __future__ import annotations
-
+import numpy as np
 from meal_assist.config import SystemConfig
 from meal_assist.robot import RobotModel
 from tutorial_drag_opt_common import (
@@ -33,7 +33,7 @@ W_TIP = 1.0
 W_ACC = 0.1
 
 
-def total_cost(robot: RobotModel, q_path, target_tip_path):
+def total_cost(robot: RobotModel, q_path: np.ndarray, target_tip_path: np.ndarray):
     """Compute Step 2 weighted cost terms.
 
     Tip tracking:

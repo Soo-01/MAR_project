@@ -1,9 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Meal-assist robot package split out from ``eating_scoop_system_v11.py``.
+"""Compact support package for meal-assist trajectory-optimization tutorials."""
+from .core import (
+    FoodRegion,
+    MouthConnector,
+    MouthConnectorDatabase,
+    NeutralConnector,
+    NeutralDatabase,
+    PoseTarget,
+    PrimitiveDatabase,
+    RobotModel,
+    ScoopPrimitive,
+    StepResult,
+    SystemConfig,
+    TrayGeometry,
+)
 
-Run with:
-
-    python -m meal_assist --mode test_run
-"""
-
-from .config import SystemConfig  # noqa: F401
+__all__ = [
+    "FoodRegion",
+    "MouthConnector",
+    "MouthConnectorDatabase",
+    "NeutralConnector",
+    "NeutralDatabase",
+    "PoseTarget",
+    "PrimitiveDatabase",
+    "RobotModel",
+    "ScoopPrimitive",
+    "StepResult",
+    "SystemConfig",
+    "TrayGeometry",
+]
